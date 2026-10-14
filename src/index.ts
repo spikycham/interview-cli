@@ -1,6 +1,8 @@
 import { createInterface } from "node:readline/promises";
 import { chat } from "./providers/lm.ts";
 import { assistantPrompt } from "./providers/assistant.ts";
+import { createSession, writeHistory } from "./record.ts";
+import { ARGS } from "./cli.ts";
 
 // type State = "listening" | "tts" | "responding" | "stt" | "recording";
 type State = "inputting" | "responding" | "recording";
@@ -26,6 +28,10 @@ function handleCommand(prompt: string): boolean {
     }
 }
 
+// Init session.
+let uuid = ARGS.UUID;
+uuid = await createSession(uuid);
+
 // Event loop.
 let first = false;
 let prompt = "";
@@ -42,6 +48,9 @@ while (true) {
                 if (!handleCommand(prompt)) continue;
             }
             breakline();
+
+            await writeHistory(uuid, prompt);
+
             state = "responding";
             break;
         }
@@ -50,7 +59,7 @@ while (true) {
             // TODO: catch no response and retry.
             let interval: ReturnType<typeof loading> | null = loading();
 
-            let lastChunk = "";
+            let question = "";
             for await (const content of chat(prompt)) {
                 if (interval) {
                     clearInterval(interval);
@@ -58,15 +67,13 @@ while (true) {
                     interval = null;
                 }
 
-                lastChunk = content;
+                question += content;
                 process.stdout.write(content);
             }
-            if (!lastChunk.endsWith("\n")) breakline();
-            state = "recording";
-            break;
-        }
+            if (!question.endsWith("\n")) breakline();
 
-        case "recording": {
+            await writeHistory(uuid, question);
+
             state = "inputting";
             break;
         }

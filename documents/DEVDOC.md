@@ -6,31 +6,6 @@
 >
 > Provider 分工：**文本模型**（Interviewer 对话 + 评估）走 openai SDK chat completions，key 为 `OPENAI_API_KEY`，模型名由 `OPENAI_MODEL` 指定（非官方模型，如用兼容端点加 `baseURL`，端点也走环境变量 `OPENAI_BASE_URL`，可选）；**TTS / ASR** 走小米 mimo（openai SDK + `base_url="https://api.xiaomimimo.com/v1"`，key 为 `MIMO_API_KEY`）。
 
-## 1. 环境变量（启动前全部校验，缺失即报错退出）
-
-| 变量 | 用途 | 必需 |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | 文本模型 | 是 |
-| `OPENAI_MODEL` | 文本模型名（如 `gpt-4o-mini`、`deepseek-chat` 等，实现不硬编码） | 是 |
-| `OPENAI_BASE_URL` | 文本模型兼容端点（openai SDK 默认官方地址） | 否 |
-| `MIMO_API_KEY` | mimo TTS + ASR | 是 |
-
-## 2. CLI 契约
-
-```
-it start --seed "..." | --seed-file <path>
-    --voice <name>          # TTS 音色，默认 Chloe
-    --interviewer-name <n>  # 默认 Alex
-    --output-dir <dir>      # 默认 sessions
-
-it eval <session-id> | --last
-    --output-dir <dir>
-```
-
-- `--seed` 与 `--seed-file` 互斥，必须恰好给一个；`--seed-file` 读整个文件内容
-- `evaluate` 中 `<session-id>` 与 `--last` 互斥，必须恰好给一个
-- `--last` 取 output-dir 下 mtime 最新的子目录；无子目录则报错
-
 ## 3. 会话循环行为规范
 
 ### 3.1 启动
