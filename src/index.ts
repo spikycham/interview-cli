@@ -48,13 +48,20 @@ while (true) {
 
         case "responding": {
             // TODO: catch no response and retry.
-            process.stdout.write("$ ");
-            let answer = "";
+            let interval: ReturnType<typeof loading> | null = loading();
+
+            let lastChunk = "";
             for await (const content of chat(prompt)) {
-                answer += content;
+                if (interval) {
+                    clearInterval(interval);
+                    process.stdout.write("\r$ ");
+                    interval = null;
+                }
+
+                lastChunk = content;
                 process.stdout.write(content);
             }
-            if (!answer.endsWith("\n")) breakline();
+            if (!lastChunk.endsWith("\n")) breakline();
             state = "recording";
             break;
         }
@@ -69,4 +76,12 @@ while (true) {
 // Helpers.
 function breakline() {
     process.stdout.write("\n");
+}
+function loading(): ReturnType<typeof setInterval> {
+    const syms = ["|", "/", "-", "\\"];
+    let count = 0;
+    return setInterval(() => {
+        process.stdout.write(`\r$ ${syms[count % 4]}`);
+        count++;
+    }, 200);
 }
