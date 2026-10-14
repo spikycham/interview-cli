@@ -17,5 +17,3 @@ ${jd}
 
 CV:
 ${cv}`;
-
-console.log(systemPrompt);
