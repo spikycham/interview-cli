@@ -6,7 +6,7 @@ class CLIError extends Error {
 }
 
 function parseArg(prefix: string): string {
-    const err = new CLIError("missing argument --" + prefix);
+    const err = new CLIError(`missing argument --${prefix}`);
 
     const arg = process.argv.find((arg) => arg.startsWith(`--${prefix}=`));
     if (!arg) throw err;
