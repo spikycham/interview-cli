@@ -20,7 +20,7 @@
 ```
 it start --seed "..." | --seed-file <path>
     --voice <name>          # TTS 音色，默认 Chloe
-    --interviewer-name <n>  # 默认 Raulf
+    --interviewer-name <n>  # 默认 Alex
     --output-dir <dir>      # 默认 sessions
 
 it eval <session-id> | --last
@@ -118,7 +118,7 @@ Seed Instruction:
   "id": "<hex>",
   "created_at": "<ISO8601 UTC>",
   "seed_instruction": "...",
-  "interviewer_name": "Raulf",
+  "interviewer_name": "Alex",
   "voice": "...",
   "providers": { "llm": "...", "tts": "...", "stt": "...", "recorder": "...", "player": "..." },
   "ended_cleanly": false
