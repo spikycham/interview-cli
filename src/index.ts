@@ -11,6 +11,22 @@ const rl = createInterface({
     output: process.stdout,
 });
 
+// Prompt commands.
+const commands = ["exit"] as const;
+type PromptCommand = (typeof commands)[number];
+function handleCommand(prompt: string): boolean {
+    const command = prompt.slice(1) as PromptCommand;
+    switch (command) {
+        case "exit":
+            process.exit(0);
+        default:
+            breakline();
+            process.stdout.write(`$ Prompt command ${command} not found\n`);
+            return false;
+    }
+}
+
+// Event loop.
 let first = false;
 let prompt = "";
 while (true) {
@@ -20,23 +36,37 @@ while (true) {
     }
 
     switch (state) {
-        case "inputting":
-            prompt = await rl.question("Your answer: ");
-            if (prompt === "/exit") process.exit(0);
-            process.stdout.write("\n");
+        case "inputting": {
+            prompt = await rl.question("# ");
+            if (prompt.startsWith("/")) {
+                if (!handleCommand(prompt)) continue;
+            }
+            breakline();
             state = "responding";
             break;
-        case "responding":
+        }
+
+        case "responding": {
             // TODO: catch no response and retry.
-            // TODO: the last line will be overwrite by the `rl.question`.
             process.stdout.write("$ ");
+            let answer = "";
             for await (const content of chat(prompt)) {
+                answer += content;
                 process.stdout.write(content);
             }
+            if (!answer.endsWith("\n")) breakline();
             state = "recording";
             break;
-        case "recording":
+        }
+
+        case "recording": {
             state = "inputting";
             break;
+        }
     }
+}
+
+// Helpers.
+function breakline() {
+    process.stdout.write("\n");
 }

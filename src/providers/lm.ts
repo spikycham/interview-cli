@@ -49,7 +49,7 @@ export async function* chat(prompt: string) {
         if (!content) continue;
 
         answer += content;
-        yield content;
+        yield content.replace(/\n/g, " ");
     }
 
     messages.push({
