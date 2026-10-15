@@ -95,8 +95,7 @@ export async function writeAudio(uuid: string, file: File) {
     );
     const metadata: Metadata = JSON.parse(str);
     const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
-    console.log(filename);
-
+    console.log(filename, file);
     await fs.writeFile(
         path.join(process.cwd(), `${filename}.wav`),
         Buffer.from(await file.arrayBuffer()),

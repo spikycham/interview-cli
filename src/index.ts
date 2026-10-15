@@ -5,7 +5,14 @@ import { ARGS } from "./cli.ts";
 import { cv, jd } from "./providers/system.ts";
 import { recordAudio } from "openai/helpers/audio.mjs";
 
-type State = "considering" | "listening" | "recording_audio" | "tts" | "responding" | "stt";
+type State =
+    | "considering"
+    | "listening"
+    | "recording_audio"
+    | "tts"
+    | "responding"
+    | "stt"
+    | "done"; // done for developing;
 let state: State = "considering";
 // TOOD(optimize): 30 seconds for considering each question, and 2 minutes for answering.
 // type State = "inputting" | "responding" | "recording";
@@ -36,7 +43,8 @@ await writeJDCV(uuid, jd, cv);
 // Event loop.
 let first = false;
 // let prompt = "";
-while (true) {
+let loop = true;
+while (loop) {
     if (!first) {
         // TODO: play an audio here.
         process.stdout.write(`[INTERVIEWER] ${assistantPrompt}\n`);
@@ -59,14 +67,13 @@ while (true) {
             }, 1_000);
 
             await new Promise<void>((resolve) => {
-                const timeout = setTimeout(() => cleanup(), 3000);
-
                 const cleanup = () => {
                     clearTimeout(timeout);
                     clearInterval(interval);
                     resolve();
                 };
 
+                const timeout = setTimeout(cleanup, 3000);
                 wait(cleanup);
             });
 
@@ -75,17 +82,32 @@ while (true) {
         }
 
         case "recording_audio": {
-            process.stdout.write(`\r\x1B[K[_____SYSTEM] Answering...`);
-            // const audioPromise = recordAudio({ signal: AbortSignal.timeout(2 * 60 * 1000) });
-            // wait(() => {});
-            // await writeAudio(uuid, audio);
+            process.stdout.write(`\r\x1B[K[_____SYSTEM] Answering...\n`);
+
+            const ac = new AbortController();
+            let audio = null;
+
+            const signal = AbortSignal.any([ac.signal, AbortSignal.timeout(2 * 60 * 1000)]);
+            const audioPromise = recordAudio({ device: 0, signal });
+
+            wait(() => {
+                ac.abort();
+            });
+            audio = await audioPromise;
+
+            if (!audio) throw new Error("no audio found");
+            await writeAudio(uuid, audio);
+
             state = "stt";
             break;
         }
 
         case "stt": {
-            state = "considering";
+            state = "done";
             break;
+        }
+        case "done": {
+            loop = false;
         }
     }
 }
