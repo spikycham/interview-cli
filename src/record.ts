@@ -87,3 +87,18 @@ export async function readHistory(uuid: string) {
 
     return history;
 }
+
+export async function writeAudio(uuid: string, file: File) {
+    const str = await fs.readFile(
+        path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
+        "utf-8",
+    );
+    const metadata: Metadata = JSON.parse(str);
+    const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
+    console.log(filename);
+
+    await fs.writeFile(
+        path.join(process.cwd(), `${filename}.wav`),
+        Buffer.from(await file.arrayBuffer()),
+    );
+}
