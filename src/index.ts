@@ -1,21 +1,15 @@
-import { createInterface } from "node:readline/promises";
 // import { chat } from "./providers/lm.ts";
 import { assistantPrompt } from "./providers/assistant.ts";
 import { createSession, writeJDCV, writeHistory, writeAudio } from "./record.ts";
 import { ARGS } from "./cli.ts";
 import { cv, jd } from "./providers/system.ts";
-import { recordAudio } from "openai/helpers/audio.js";
+import { recordAudio } from "openai/helpers/audio.mjs";
 
 type State = "considering" | "listening" | "recording_audio" | "tts" | "responding" | "stt";
 let state: State = "considering";
 // TOOD(optimize): 30 seconds for considering each question, and 2 minutes for answering.
 // type State = "inputting" | "responding" | "recording";
 // let state: State = "inputting";
-
-const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
 
 // Prompt commands.
 const commands = ["exit"] as const;
@@ -65,20 +59,15 @@ while (true) {
             }, 1_000);
 
             await new Promise<void>((resolve) => {
-                const timeout = setTimeout(() => onLine(), 3000);
-
-                const onLine = () => {
-                    cleanup();
-                    resolve();
-                };
+                const timeout = setTimeout(() => cleanup(), 3000);
 
                 const cleanup = () => {
                     clearTimeout(timeout);
                     clearInterval(interval);
-                    rl.off("line", onLine);
+                    resolve();
                 };
 
-                rl.on("line", onLine);
+                wait(cleanup);
             });
 
             state = "recording_audio";
@@ -87,7 +76,9 @@ while (true) {
 
         case "recording_audio": {
             process.stdout.write(`\r\x1B[K[_____SYSTEM] Answering...`);
-            await new Promise((resolve) => setTimeout(() => resolve(1), 1000));
+            // const audioPromise = recordAudio({ signal: AbortSignal.timeout(2 * 60 * 1000) });
+            // wait(() => {});
+            // await writeAudio(uuid, audio);
             state = "stt";
             break;
         }
@@ -96,42 +87,6 @@ while (true) {
             state = "considering";
             break;
         }
-
-        // case "inputting": {
-        //     prompt = await rl.question("# ");
-        //     if (prompt.startsWith("/")) {
-        //         if (!handleCommand(uuid, prompt)) continue;
-        //     }
-        //     breakline();
-        //
-        //     await writeHistory(uuid, prompt);
-        //
-        //     state = "responding";
-        //     break;
-        // }
-        //
-        // case "responding": {
-        //     // TODO: catch no response and retry.
-        //     let interval: ReturnType<typeof loading> | null = loading();
-        //
-        //     let question = "";
-        //     for await (const content of chat(prompt)) {
-        //         if (interval) {
-        //             clearInterval(interval);
-        //             process.stdout.write("\r$ ");
-        //             interval = null;
-        //         }
-        //
-        //         question += content;
-        //         process.stdout.write(content);
-        //     }
-        //     if (!question.endsWith("\n")) breakline();
-        //
-        //     await writeHistory(uuid, question);
-        //
-        //     state = "inputting";
-        //     break;
-        // }
     }
 }
 
@@ -146,4 +101,13 @@ function loading(): ReturnType<typeof setInterval> {
         process.stdout.write(`\r$ ${syms[count % 4]}`);
         count++;
     }, 200);
+}
+function wait(cb: () => void) {
+    process.stdin.setRawMode(true);
+    process.stdin.on("data", (key: Buffer) => {
+        if (key[0] === 13) {
+            process.stdin.setRawMode(false);
+            cb();
+        }
+    });
 }
