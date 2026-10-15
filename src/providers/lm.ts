@@ -3,7 +3,7 @@ import { ENV } from "../env.ts";
 import { systemPrompt } from "./system.ts";
 import { assistantPrompt } from "./assistant.ts";
 
-class ModelError extends Error {
+export class ModelError extends Error {
     constructor(message: string) {
         super(message);
         this.name = "ModelError";
@@ -35,6 +35,7 @@ export async function* chat(prompt: string) {
     const resp = await client.chat.completions.create({
         model: ENV.MODEL_NAME,
         messages,
+        max_completion_tokens: 512,
         stream: true,
     });
 

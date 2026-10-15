@@ -23,9 +23,10 @@ function parseArg(prefix: string, shouldExist: boolean) {
 }
 
 // TODO: optimize the way of getting the arguments.
+// The validation should be put into the user.
 export const ARGS = {
     OUTPUT: "sessions",
     UUID: parseArg("uuid", false),
-    JD: parseArg("jd", true),
-    CV: parseArg("cv", true),
+    JD: parseArg("jd", false),
+    CV: parseArg("cv", false),
 };

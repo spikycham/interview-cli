@@ -1,10 +1,12 @@
 import { createInterface } from "node:readline/promises";
 import { chat } from "./providers/lm.ts";
 import { assistantPrompt } from "./providers/assistant.ts";
-import { createSession, writeHistory } from "./record.ts";
+import { createSession, writeJDCV, writeHistory } from "./record.ts";
 import { ARGS } from "./cli.ts";
+import { cv, jd } from "./providers/system.ts";
 
-// type State = "listening" | "tts" | "responding" | "stt" | "recording";
+// type State = "considering" | "listening" | "tts" | "responding" | "stt"
+// TOOD(optimize): 30 seconds for considering each question, and 2 minutes for answering.
 type State = "inputting" | "responding" | "recording";
 let state: State = "inputting";
 
@@ -16,10 +18,13 @@ const rl = createInterface({
 // Prompt commands.
 const commands = ["exit"] as const;
 type PromptCommand = (typeof commands)[number];
-function handleCommand(prompt: string): boolean {
+function handleCommand(uuid: string, prompt: string): boolean {
     const command = prompt.slice(1) as PromptCommand;
     switch (command) {
         case "exit":
+            // TODO: update this prompt.
+            breakline();
+            process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
             process.exit(0);
         default:
             breakline();
@@ -30,6 +35,7 @@ function handleCommand(prompt: string): boolean {
 
 // Init session.
 const uuid = ARGS.UUID ?? (await createSession());
+await writeJDCV(uuid, jd, cv);
 
 // Event loop.
 let first = false;
@@ -44,7 +50,7 @@ while (true) {
         case "inputting": {
             prompt = await rl.question("# ");
             if (prompt.startsWith("/")) {
-                if (!handleCommand(prompt)) continue;
+                if (!handleCommand(uuid, prompt)) continue;
             }
             breakline();
 
