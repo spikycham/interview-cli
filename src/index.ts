@@ -29,8 +29,7 @@ function handleCommand(prompt: string): boolean {
 }
 
 // Init session.
-let uuid = ARGS.UUID;
-uuid = await createSession(uuid);
+const uuid = ARGS.UUID ?? (await createSession());
 
 // Event loop.
 let first = false;

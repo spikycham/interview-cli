@@ -11,18 +11,14 @@ interface Metadata {
     current_role: RoleType;
 }
 
-export function createSession(uuid: string): Promise<void>;
-export function createSession(uuid: undefined): Promise<string>;
-export async function createSession(uuid: string | undefined): Promise<string | void> {
-    if (uuid) return;
-    uuid = randomUUID();
+export async function createSession(): Promise<string> {
+    const uuid = randomUUID();
 
     await fs.mkdir(path.join(process.cwd(), `sessions/${uuid}`), { recursive: true });
     await fs.writeFile(
         path.join(process.cwd(), `sessions/${uuid}/assistant_001.txt`),
         assistantPrompt,
     );
-
     await fs.writeFile(
         path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
         JSON.stringify({
