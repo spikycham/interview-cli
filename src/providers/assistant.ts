@@ -1,3 +1,3 @@
-import { lang } from "./language.ts";
+import { lang } from "../cli.ts";
 
 export const assistantPrompt = lang.welcome;

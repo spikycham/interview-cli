@@ -1,5 +1,3 @@
-import { languages, type LanguageType } from "./providers/language.ts";
-
 class CLIError extends Error {
     constructor(message: string) {
         super(message);
@@ -24,18 +22,16 @@ function parseArg(prefix: string, shouldExist: boolean) {
     return v;
 }
 
+const languages = ["zh", "en"] as const;
+type LanguageType = (typeof languages)[number];
 function parseLang(): LanguageType {
-    const err = new CLIError("missing argument --lang");
+    const DEFAULT_LANGUAGE = "zh";
 
     const arg = process.argv.find((arg) => arg.startsWith("--lang="));
-    if (!arg) throw err;
+    if (!arg) return DEFAULT_LANGUAGE;
 
     const v = arg.split("=")[1] as LanguageType;
-    if (!v) throw err;
-    if (!languages.includes(v)) {
-        console.log("invalid language, use en by default");
-        return "en";
-    }
+    if (!v || !languages.includes(v)) return DEFAULT_LANGUAGE;
     return v;
 }
 
@@ -48,3 +44,15 @@ export const ARGS = {
     CV: parseArg("cv", false),
     LANG: parseLang(),
 };
+
+const map = {
+    zh: {
+        label: "Chinese",
+        welcome: "欢迎参加本次面试，我是 Alex，请你先简单介绍一下自己。",
+    },
+    en: {
+        label: "English",
+        welcome: "Welcome to this interview, I'm Alex. Please introduce yourself briefly.",
+    },
+};
+export const lang = map[ARGS.LANG];

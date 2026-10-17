@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "node:path";
-import { ARGS } from "../cli.ts";
-import { lang } from "./language.ts";
+import { ARGS, lang } from "../cli.ts";
 
 // TODO: refer to src/cli.ts:26
 export const jd = await fs.readFile(path.join(process.cwd(), ARGS.JD!), "utf-8");

@@ -1,5 +1,5 @@
+import { lang } from "../cli.ts";
 import { readHistory, readJDCV } from "../record.ts";
-import { lang } from "./language.ts";
 
 export async function generateEvaluationPrompt(uuid: string) {
     const { jd, cv } = await readJDCV(uuid);
