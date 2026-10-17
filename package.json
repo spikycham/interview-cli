@@ -4,7 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "node src/index.ts"
+        "dev": "node src/index.ts",
+        "eval": "node src/eval.ts"
     },
     "keywords": [],
     "author": "",

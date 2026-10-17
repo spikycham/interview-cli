@@ -37,7 +37,7 @@ while (loop) {
                 case "/exit": {
                     breakline();
                     breakline();
-                    process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
+                    process.stdout.write(`Run evaluation with pnpm eval --uuid=${uuid}`);
                     process.exit(0);
                 }
                 default: {
