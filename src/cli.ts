@@ -1,3 +1,5 @@
+import { languages, type LanguageType } from "./providers/language.ts";
+
 class CLIError extends Error {
     constructor(message: string) {
         super(message);
@@ -22,6 +24,21 @@ function parseArg(prefix: string, shouldExist: boolean) {
     return v;
 }
 
+function parseLang(): LanguageType {
+    const err = new CLIError("missing argument --lang");
+
+    const arg = process.argv.find((arg) => arg.startsWith("--lang="));
+    if (!arg) throw err;
+
+    const v = arg.split("=")[1] as LanguageType;
+    if (!v) throw err;
+    if (!languages.includes(v)) {
+        console.log("invalid language, use en by default");
+        return "en";
+    }
+    return v;
+}
+
 // TODO: optimize the way of getting the arguments.
 // The validation should be put into the user.
 export const ARGS = {
@@ -29,4 +46,5 @@ export const ARGS = {
     UUID: parseArg("uuid", false),
     JD: parseArg("jd", false),
     CV: parseArg("cv", false),
+    LANG: parseLang(),
 };

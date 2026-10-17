@@ -1,10 +1,11 @@
 import { readHistory, readJDCV } from "../record.ts";
+import { lang } from "./language.ts";
 
 export async function generateEvaluationPrompt(uuid: string) {
     const { jd, cv } = await readJDCV(uuid);
     const transcript = await readHistory(uuid);
 
-    return `You are evaluating an English-language mock interview after the session has ended.
+    return `You are evaluating an ${lang.label}-language mock interview after the session has ended.
 The transcript below came from speech recognition, so minor STT artifacts such as punctuation errors
 or homophone mistakes should not be nitpicked unless they materially affect meaning.
 Use the persisted JD (Job Description) and CV Instruction as the scenario for judging content quality.

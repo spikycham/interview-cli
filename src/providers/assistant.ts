@@ -1,1 +1,3 @@
-export const assistantPrompt = `Please introduce yourself briefly before we start the interview.`;
+import { lang } from "./language.ts";
+
+export const assistantPrompt = lang.welcome;
