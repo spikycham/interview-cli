@@ -1,32 +1,12 @@
 import { chat, stt, tts } from "./providers/lm.ts";
-import { spawn } from "node:child_process";
 import { assistantPrompt } from "./providers/assistant.ts";
 import { createSession, writeJDCV, writeHistory, writeAudio, readAudio } from "./record.ts";
 import { ARGS } from "./cli.ts";
 import { cv, jd } from "./providers/system.ts";
 import { playAudio, recordAudio } from "openai/helpers/audio.mjs";
-import { Readable } from "node:stream";
 
-type State = "considering" | "listening" | "recording_audio" | "stt" | "asking" | "done"; // done for developing;
+type State = "considering" | "listening" | "recording_audio" | "stt" | "asking"; // use done for developing;
 let state: State = "considering";
-
-// Prompt commands.
-const commands = ["exit"] as const;
-type PromptCommand = (typeof commands)[number];
-function handleCommand(uuid: string, prompt: string): boolean {
-    const command = prompt.slice(1) as PromptCommand;
-    switch (command) {
-        case "exit":
-            // TODO: update this prompt.
-            breakline();
-            process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
-            process.exit(0);
-        default:
-            breakline();
-            process.stdout.write(`$ Prompt command ${command} not found\n`);
-            return false;
-    }
-}
 
 // Init session.
 const uuid = ARGS.UUID ?? (await createSession());
@@ -143,13 +123,13 @@ while (loop) {
 
             await playAudio(audio);
 
-            breakline();
-            state = "done";
-            break;
-        }
+            clearline();
+            writeHeader("interviewer");
+            process.stdout.write(text);
 
-        case "done": {
-            loop = false;
+            breakline();
+            state = "considering";
+            break;
         }
     }
 }
@@ -190,3 +170,21 @@ function wait(cb: () => void) {
         }
     });
 }
+
+// Prompt commands.
+// const commands = ["exit"] as const;
+// type PromptCommand = (typeof commands)[number];
+// function handleCommand(uuid: string, prompt: string): boolean {
+//     const command = prompt.slice(1) as PromptCommand;
+//     switch (command) {
+//         case "exit":
+//             // TODO: update this prompt.
+//             breakline();
+//             process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
+//             process.exit(0);
+//         default:
+//             breakline();
+//             process.stdout.write(`$ Prompt command ${command} not found\n`);
+//             return false;
+//     }
+// }
