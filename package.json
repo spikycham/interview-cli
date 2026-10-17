@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
-    "scripts": {},
+    "scripts": {
+        "dev": "node src/index.ts"
+    },
     "keywords": [],
     "author": "",
     "license": "ISC",

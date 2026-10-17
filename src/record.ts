@@ -97,7 +97,7 @@ export async function writeAudio(uuid: string, file: File) {
     const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
     console.log(filename, file);
     await fs.writeFile(
-        path.join(process.cwd(), `${filename}.wav`),
+        path.join(process.cwd(), `sessions/${uuid}/${filename}.wav`),
         Buffer.from(await file.arrayBuffer()),
     );
 }
