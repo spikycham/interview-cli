@@ -78,12 +78,12 @@ export async function readHistory(uuid: string) {
             path.join(process.cwd(), `sessions/${uuid}/assistant_${idx}.txt`),
             "utf-8",
         );
-        history += `Interviewer_${idx}: ${assistant}`;
+        history += `Interviewer_${idx}: ${assistant}\n`;
         const user = await fs.readFile(
             path.join(process.cwd(), `sessions/${uuid}/user_${idx}.txt`),
             "utf-8",
         );
-        history += `Speaker_${idx}: ${user}`;
+        history += `Speaker_${idx}: ${user}\n`;
     }
 
     return history;
