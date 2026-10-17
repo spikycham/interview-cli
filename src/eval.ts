@@ -9,6 +9,8 @@ if (!uuid) throw new Error("no uuid to generate the transcripts");
 await run(uuid);
 
 async function run(uuid: string) {
+    const interval = loading();
+
     const evaluationPrompt = await generateEvaluationPrompt(uuid);
 
     const client = new OpenAI({
@@ -29,5 +31,16 @@ async function run(uuid: string) {
     const content = resp.choices[0]?.message.content;
     if (!content) throw new Error("no response for evaluation");
     await writeEval(uuid, content);
-    console.log(`Evaluation saved to sessions/${uuid}/eval.md`);
+    process.stdout.write(`\r\x1B[KEvaluation saved to sessions/${uuid}/eval.md\n`);
+
+    clearInterval(interval);
+}
+
+function loading(): ReturnType<typeof setInterval> {
+    const syms = ["|", "/", "-", "\\"];
+    let count = 0;
+    return setInterval(() => {
+        process.stdout.write(`\r\x1B[K[_____System] ${syms[count % 4]}`);
+        count++;
+    }, 200);
 }
