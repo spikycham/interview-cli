@@ -58,3 +58,53 @@ export async function* chat(prompt: string) {
         content: answer,
     });
 }
+
+export async function stt(base64: string) {
+    const resp = await client.chat.completions.create({
+        model: ENV.STT_MODEL_NAME,
+        messages: [
+            {
+                role: "user",
+                content: [
+                    {
+                        type: "input_audio",
+                        input_audio: {
+                            data: `data:audio/wav;base64,${base64}`,
+                            format: "wav",
+                        },
+                    },
+                ],
+            },
+        ],
+        // @ts-expect-error
+        extra_body: {
+            asr_options: {
+                language: "en",
+            },
+        },
+    });
+    const content = resp.choices[0]?.message.content;
+    if (!content) throw new ModelError("responded nothing");
+    return content;
+}
+export async function tts(text: string) {
+    const resp = await client.chat.completions.create({
+        model: ENV.TTS_MODEL_NAME,
+        messages: [
+            {
+                role: "user",
+                content:
+                    "You're the interviewer, and you're asking the user questions. Be serious about this.",
+            },
+            { role: "assistant", content: text },
+        ],
+        audio: {
+            format: "mp3",
+            voice: "Dean",
+        },
+    });
+
+    const audio = resp.choices[0]?.message.audio?.data;
+    if (!audio) throw new ModelError("responded nothing");
+    return new File([Buffer.from(audio, "base64")], "audio.wav", { type: "audio/wav" });
+}

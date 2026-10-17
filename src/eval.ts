@@ -22,7 +22,7 @@ async function run(uuid: string) {
                 content: evaluationPrompt,
             },
         ],
-        max_completion_tokens: 512,
+        max_completion_tokens: 2048,
     });
     // TODO: write eval.md into session directory.
     console.log(resp.choices[0]?.message.content);

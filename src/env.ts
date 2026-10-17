@@ -18,5 +18,7 @@ function parseEnv(key: string): string {
 export const ENV = {
     BASE_URL: parseEnv("BASE_URL"),
     MODEL_NAME: parseEnv("MODEL_NAME"),
+    STT_MODEL_NAME: parseEnv("STT_MODEL_NAME"),
+    TTS_MODEL_NAME: parseEnv("TTS_MODEL_NAME"),
     API_KEY: parseEnv("API_KEY"),
 };

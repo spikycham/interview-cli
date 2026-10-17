@@ -9,6 +9,8 @@ interface Metadata {
     uuid: string;
     current_round: number;
     current_role: RoleType;
+    jd: string;
+    cv: string;
 }
 
 export async function createSession(): Promise<string> {
@@ -25,6 +27,8 @@ export async function createSession(): Promise<string> {
             uuid: uuid,
             current_round: 1,
             current_role: "user",
+            jd: "",
+            cv: "",
         }),
     );
 
@@ -32,34 +36,31 @@ export async function createSession(): Promise<string> {
 }
 
 export async function writeJDCV(uuid: string, jd: string, cv: string) {
-    await fs.writeFile(path.join(process.cwd(), `sessions/${uuid}/jd.md`), jd);
-    await fs.writeFile(path.join(process.cwd(), `sessions/${uuid}/cv.md`), cv);
-}
-export async function readJDCV(uuid: string) {
-    const jd = await fs.readFile(path.join(process.cwd(), `sessions/${uuid}/jd.md`), "utf-8");
-    const cv = await fs.readFile(path.join(process.cwd(), `sessions/${uuid}/cv.md`), "utf-8");
-    return { jd, cv };
-}
-
-export async function writeHistory(uuid: string, content: string) {
     const str = await fs.readFile(
         path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
         "utf-8",
     );
     const metadata: Metadata = JSON.parse(str);
 
-    const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
-    if (metadata.current_role === "user") metadata.current_round++;
-    metadata.current_role = metadata.current_role === "user" ? "assistant" : "user";
+    metadata.jd = jd;
+    metadata.cv = cv;
 
-    await fs.writeFile(
-        path.join(process.cwd(), `sessions/${metadata.uuid}/${filename}.txt`),
-        content,
-    );
     await fs.writeFile(
         path.join(process.cwd(), `sessions/${metadata.uuid}/metadata.json`),
         JSON.stringify(metadata),
     );
+}
+export async function readJDCV(uuid: string) {
+    const str = await fs.readFile(
+        path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
+        "utf-8",
+    );
+    const metadata: Metadata = JSON.parse(str);
+
+    return {
+        jd: metadata.jd,
+        cv: metadata.cv,
+    };
 }
 
 export async function readHistory(uuid: string) {
@@ -87,7 +88,38 @@ export async function readHistory(uuid: string) {
 
     return history;
 }
+export async function writeHistory(uuid: string, content: string) {
+    const str = await fs.readFile(
+        path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
+        "utf-8",
+    );
+    const metadata: Metadata = JSON.parse(str);
 
+    const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
+    if (metadata.current_role === "user") metadata.current_round++;
+    metadata.current_role = metadata.current_role === "user" ? "assistant" : "user";
+
+    await fs.writeFile(
+        path.join(process.cwd(), `sessions/${metadata.uuid}/${filename}.txt`),
+        content,
+    );
+    await fs.writeFile(
+        path.join(process.cwd(), `sessions/${metadata.uuid}/metadata.json`),
+        JSON.stringify(metadata),
+    );
+}
+
+export async function readAudio(uuid: string) {
+    const str = await fs.readFile(
+        path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
+        "utf-8",
+    );
+    const metadata: Metadata = JSON.parse(str);
+    const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
+
+    const buffer = await fs.readFile(path.join(process.cwd(), `sessions/${uuid}/${filename}.wav`));
+    return buffer.toBase64();
+}
 export async function writeAudio(uuid: string, file: File) {
     const str = await fs.readFile(
         path.join(process.cwd(), `sessions/${uuid}/metadata.json`),
@@ -95,7 +127,6 @@ export async function writeAudio(uuid: string, file: File) {
     );
     const metadata: Metadata = JSON.parse(str);
     const filename = `${metadata.current_role}_${metadata.current_round.toString().padStart(3, "0")}`;
-    console.log(filename, file);
     await fs.writeFile(
         path.join(process.cwd(), `sessions/${uuid}/${filename}.wav`),
         Buffer.from(await file.arrayBuffer()),
