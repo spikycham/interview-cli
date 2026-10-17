@@ -55,7 +55,7 @@ while (loop) {
                 clearline();
                 writeHeader("system");
                 process.stdout.write(
-                    `Plz consider the question clearly ${count--}... Press Enter to answer.`,
+                    `Consider the question clearly ${count--}... Press Enter to answer.`,
                 );
             };
 
