@@ -11,7 +11,7 @@ await writeJDCV(uuid, jd, cv);
 
 // Event loop.
 type State = "commanding" | "considering" | "listening" | "recording_audio" | "stt" | "asking"; // use done for developing;
-let state: State = "considering";
+let state: State = "commanding";
 
 let first = true;
 let prompt = "";
@@ -35,6 +35,7 @@ while (loop) {
                     break;
                 }
                 case "/exit": {
+                    breakline();
                     breakline();
                     process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
                     process.exit(0);

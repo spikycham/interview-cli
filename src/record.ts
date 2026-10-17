@@ -132,3 +132,7 @@ export async function writeAudio(uuid: string, file: File) {
         Buffer.from(await file.arrayBuffer()),
     );
 }
+
+export async function writeEval(uuid: string, content: string) {
+    await fs.writeFile(path.join(process.cwd(), `sessions/${uuid}/eval.md`), content, "utf8");
+}
