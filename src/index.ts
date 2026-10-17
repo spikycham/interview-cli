@@ -5,17 +5,18 @@ import { ARGS } from "./cli.ts";
 import { cv, jd } from "./providers/system.ts";
 import { playAudio, recordAudio } from "openai/helpers/audio.mjs";
 
-type State = "considering" | "listening" | "recording_audio" | "stt" | "asking"; // use done for developing;
-let state: State = "considering";
-
 // Init session.
 const uuid = ARGS.UUID ?? (await createSession());
 await writeJDCV(uuid, jd, cv);
 
 // Event loop.
+type State = "commanding" | "considering" | "listening" | "recording_audio" | "stt" | "asking"; // use done for developing;
+let state: State = "considering";
+
 let first = true;
 let prompt = "";
 let loop = true;
+
 while (loop) {
     if (first) {
         // TODO: play an audio here.
@@ -26,6 +27,26 @@ while (loop) {
     }
 
     switch (state) {
+        case "commanding": {
+            const command = await readline("What to do next? Enter to continue: ");
+            switch (command) {
+                case "\n": {
+                    state = "considering";
+                    break;
+                }
+                case "/exit": {
+                    breakline();
+                    process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
+                    process.exit(0);
+                }
+                default: {
+                    breakline();
+                    process.stdout.write(`$ Prompt command ${command} not found\n`);
+                }
+            }
+            break;
+        }
+
         case "considering": {
             const CONSIDER_TIME = 30;
 
@@ -111,12 +132,12 @@ while (loop) {
 
             const textChunks: string[] = [];
             for await (const content of chat(prompt)) {
-                clearInterval(interval);
                 textChunks.push(content);
             }
             const text = textChunks.reduce((prev, curr) => prev + curr, "");
             const audio = await tts(text);
 
+            clearInterval(interval);
             clearline();
             writeHeader("interviewer");
             process.stdout.write("Asking...");
@@ -128,7 +149,7 @@ while (loop) {
             process.stdout.write(text);
 
             breakline();
-            state = "considering";
+            state = "commanding";
             break;
         }
     }
@@ -140,6 +161,31 @@ function breakline() {
 }
 function clearline() {
     process.stdout.write("\r\x1B[K");
+}
+function readline(question: string) {
+    clearline();
+    writeHeader("system");
+    process.stdout.write(question);
+
+    let input = "";
+    return new Promise((resolve) => {
+        process.stdin.setRawMode(true);
+        process.stdin.setEncoding("utf8");
+
+        const onData = (chunk: string) => {
+            if (chunk === "\r" || chunk === "\n") {
+                process.stdin.off("data", onData);
+                process.stdin.setRawMode(false);
+                resolve(input.trim() || "\n");
+                return;
+            }
+
+            process.stdout.write(chunk);
+            input += chunk;
+        };
+
+        process.stdin.on("data", onData);
+    });
 }
 function loading(): ReturnType<typeof setInterval> {
     const syms = ["|", "/", "-", "\\"];
@@ -163,28 +209,15 @@ function writeHeader(type: "interviewer" | "system" | "user") {
 
 function wait(cb: () => void) {
     process.stdin.setRawMode(true);
-    process.stdin.on("data", (key: Buffer) => {
-        if (key[0] === 13) {
+    process.stdin.setEncoding("utf8");
+
+    // After the commanding state, the encoding is utf8
+    const onData = (key: string) => {
+        if (key === "\r" || key === "\n") {
+            process.stdin.off("data", onData);
             process.stdin.setRawMode(false);
             cb();
         }
-    });
+    };
+    process.stdin.on("data", onData);
 }
-
-// Prompt commands.
-// const commands = ["exit"] as const;
-// type PromptCommand = (typeof commands)[number];
-// function handleCommand(uuid: string, prompt: string): boolean {
-//     const command = prompt.slice(1) as PromptCommand;
-//     switch (command) {
-//         case "exit":
-//             // TODO: update this prompt.
-//             breakline();
-//             process.stdout.write(`Run evaluation with node src/eval.ts --uuid=${uuid}`);
-//             process.exit(0);
-//         default:
-//             breakline();
-//             process.stdout.write(`$ Prompt command ${command} not found\n`);
-//             return false;
-//     }
-// }
